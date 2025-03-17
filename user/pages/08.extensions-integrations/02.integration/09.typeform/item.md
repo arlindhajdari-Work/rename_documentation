@@ -19,44 +19,39 @@ taxonomy:
         - typeform
 ---
 
-### Typeform Configuration
+## Typeform Configuration
 
 Configuring the application to read Typeform surveys consists of various steps detailed next:
 
 - Create the survey in Typeform
-- Create a notification by email for the survey. The email must have this subject: `Typeform::<surveyid>::<surveyurl>`
-  - *surveyid* is the internal identifier assigned by Typeform
-  - *surveyurl* is the url of the survey
+- Configure a webhook for your survey. In your survey edit screen, click on the configuration cog. Click on Follow ups (Seguimientos). Create a trigger on "Survey finished" and an action of type webhook. For the webhook URL use: `https://your_domain/your_install/notifications.php?type=typeform`. Copy the webhook secret that is created for you.
 
-![](cbcrm_survey_typeform_config.png?width=100%)
+![Configure Webhook](./ConfigureWebhook.png)
 
-- Configure Email Converter in the application so it can read the Typeform notifications
+- Publish the survey
+- Open the application database and edit the `vtiger_notifications` table. Find the row for typeform and copy the webhook secret that Typeform gave you into the `signedvalue` column.
 
-![](cbcrm_typeform_scanner_config.png?width=100%)
+![Configure Evolutivo](./ConfigureEvolutivo.png)
 
-- Configure the Typeform API access key in **Settings &gt; Configuration Editor**
-- That's it, with those two changes, coreBOSCRM will receive an email each time a survey is completed and it will be registered in the application.
+- Fill in your survey and the answer should appear in the Survey modules. The process will create
+  - Survey record that represents the survey in Typeform
+  - Survey Question records for each question
+  - Survey Done record representing the fact that a survey was filled in
+  - Survey Answers for each response in the survey
 - Now you can create workflows associated to the creation event of the different records to have the system act upon them.
 
-### Typeform Implementation
+## Relating to a client in the application
 
-- Read surveyid from mail subject
-- Read typeform json
-- If survey doesn't exist &gt; create it with stats and info
-- If it exists &gt; update stats
-- Foreach questions &gt; upsert
-- Foreach responses
-  - Get ACL and email
-  - Attach email to ACL
-  - Check if done
-  - If exists &gt; ignore
-  - If not &gt; create with meta data
-  - Foreach answer &gt; create answer
-  - Update lastsync datetime
+If you want the Survey Done and Survey Answer records to be related to a record in the application you must add to your survey a hidden field named `cid` with the CRMID of the record. Using Typeform configuration you can add this field to the survey and have it automatically filled in from the URL. So if your Typeform survey has the URL:
 
-**TBD FIXME:** Check all this, document it!
+`https://form.typeform.com/to/Wk8dk34`
 
-- Limitation. Only works with existing ACL. **??? Really, no anonymous surveys ??? \#\#\#\#\#\#**
+and you add a hidden field named `cid` to that survey you can send this link to your client:
+
+`https://form.typeform.com/to/Wk8dk34?cid={clientCRMID}`
+
+where `clientCRMID` is the CRMID of the record in the application.
+
 
 ------------------------------------------------------------------------
 
